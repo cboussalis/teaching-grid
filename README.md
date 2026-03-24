@@ -45,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:1821](http://localhost:1821) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 The SQLite database is **automatically created** at `data/teaching.db` on first run with an empty schema. No database setup required.
 
@@ -250,7 +250,7 @@ These values are enforced at the database level. To change them, edit the `CHECK
 ## Development
 
 ```bash
-npm run dev      # Start dev server on port 1821
+npm run dev      # Start dev server on port 3000
 npm run build    # Production build
 npm run start    # Start production server (after build)
 npm run lint     # ESLint
@@ -297,10 +297,10 @@ Ensure no other process is accessing `data/teaching.db`. The WAL mode handles mo
 
 ### Port already in use
 
-The dev server runs on port 1821 by default. To change it, edit the `dev` script in `package.json`:
+The dev server runs on port 3000 by default (Next.js default). To change it:
 
 ```json
-"dev": "next dev --port 3000"
+"dev": "next dev --port 4000"
 ```
 
 ### Missing native dependencies

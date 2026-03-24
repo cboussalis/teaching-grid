@@ -3,7 +3,7 @@
 
 # Resolve APP_DIR relative to where this script lives
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-PORT=1821
+PORT=3000
 BROWSER="${BROWSER:-xdg-open}"
 URL="http://localhost:${PORT}"
 
