@@ -74,81 +74,79 @@ Use the web interface to add data directly:
 
 This is the simplest approach for small departments or for getting started.
 
-### Option 2: Bulk Import from CSV/Excel
+### Option 2: Bulk Import from CSV
 
-For larger datasets or migrating from a previous year, use the import script. It reads from a directory of CSV and Excel files.
+For larger datasets or migrating from a previous system, import staff and modules from two simple CSV files. Sample files are provided in `data/examples/`.
 
 ```bash
-npx tsx scripts/import-excel.ts
+npx tsx scripts/import-csv.ts data/staff.csv data/modules.csv
 ```
 
-The script expects files in a `../last-year/` directory (one level up from the app root). Edit the `lastYearPath` variable in the script if your files are elsewhere.
+You can also import just one file at a time:
 
-#### Expected File Formats
+```bash
+npx tsx scripts/import-csv.ts data/staff.csv
+npx tsx scripts/import-csv.ts --modules data/modules.csv
+```
 
-**1. Staff CSV** (`staff_25-26.csv`)
+Run `npx tsx scripts/import-csv.ts --help` for full usage details.
 
-A CSV file with staff details. Required columns:
+#### Staff CSV
 
-| Column | Description | Example |
-|--------|-------------|---------|
-| `name` | Full name | `Jane Smith` |
-| `name_abbrev` | Short abbreviation (used in the grid) | `JS` |
-| `load` | Expected teaching load (numeric) | `3` |
-| `loa` | Leave of absence flag (0 or 1) | `0` |
-| `mt_available` | Available in Michaelmas Term (0 or 1) | `1` |
-| `ht_available` | Available in Hilary Term (0 or 1) | `1` |
-| `notes` | Optional notes | `On research buyout` |
+Required columns: `name`, `abbrev`. All other columns are optional.
 
-Example:
+| Column | Required | Description | Example |
+|--------|----------|-------------|---------|
+| `name` | Yes | Full name | `Jane Smith` |
+| `abbrev` | Yes | Short abbreviation (displayed in the grid) | `JS` |
+| `load` | No | Expected teaching load (default: 0) | `3` |
+| `loa` | No | Leave of absence (0 or 1, default: 0) | `0` |
+| `mt_available` | No | Available in Michaelmas Term (0 or 1, default: 1) | `1` |
+| `ht_available` | No | Available in Hilary Term (0 or 1, default: 1) | `1` |
+| `notes` | No | Free text | `On research buyout` |
+
+Example (`data/examples/staff.csv`):
 
 ```csv
-name,name_abbrev,load,loa,mt_available,ht_available,notes
+name,abbrev,load,loa,mt_available,ht_available,notes
 Jane Smith,JS,3,0,1,1,
-John Doe,JD,2,0,1,0,On sabbatical HT
-Alex Brown,AB,3,1,0,0,Full year LOA
+John Doe,JD,2,0,1,1,Director of Studies
+Alex Brown,AB,3,0,1,0,On sabbatical in Hilary Term
 ```
 
-**2. Teaching Grid Excel** (`PS_GRID_DRAFT1.xlsx`)
+#### Modules CSV
 
-An Excel workbook where each sheet represents a module level. The import script determines the level from the sheet name (e.g., a sheet named "UG" or "Undergraduate" maps to UG level).
+Required columns: `code`, `name`. All other columns are optional.
 
-Each sheet should have this layout:
+| Column | Required | Description | Example |
+|--------|----------|-------------|---------|
+| `code` | Yes | Module code | `POL101` |
+| `name` | Yes | Module name | `Intro to Politics` |
+| `load` | No | Teaching load as a number (default: 1) | `1` |
+| `term` | No | `MT`, `HT`, `TT`, or `FullYear` | `HT` |
+| `level` | No | `UG`, `MSc IP`, `ASDS`, or `PhD` | `UG` |
+| `ects` | No | ECTS credits | `5` |
+| `notes` | No | Free text | |
 
-| Module Code | Module Name | *Staff Abbrev 1* | *Staff Abbrev 2* | ... |
-|-------------|-------------|:---------:|:---------:|:---:|
-| POU1234 | Introduction to Politics | 1 | | |
-| POU2345 | Comparative Politics | | 1 | |
-| POU3456 | Political Theory | 0.5 | 0.5 | |
+The `term` column also accepts full names: `Michaelmas`, `Hilary`, `Trinity`, `Full Year`.
+The `level` column also accepts: `Undergraduate`, `Masters`, `Data Science`, `Doctoral`.
 
-- **Row 1 (headers)**: First columns are module info; remaining columns are staff abbreviations (must match `name_abbrev` from the staff CSV)
-- **Data rows**: Each row is a module. Numeric values in staff columns indicate allocated teaching hours.
-- **Module code** is in column A, **module name** in column B. Staff columns start from column C onward.
-- The term is inferred from the module code (codes ending in `1` default to MT, `2` to HT, etc.) or from a cell value in the row if it matches a known term.
+Example (`data/examples/modules.csv`):
 
-Sheet name to level mapping:
+```csv
+code,name,load,term,level,ects,notes
+POL101,Introduction to Politics,1,MT,UG,5,
+POL102,Introduction to Political Theory,1,HT,UG,5,
+POL301,Research Methods,1,MT,UG,10,
+MSC501,Advanced Quantitative Methods,1,MT,MSc IP,10,
+PHD601,Doctoral Research Seminar,0.5,MT,PhD,,Meets fortnightly
+```
 
-| Sheet name contains | Mapped level |
-|---------------------|-------------|
-| `ug`, `undergrad` | UG |
-| `msc`, `ip` | MSc IP |
-| `asds`, `data` | ASDS |
-| `phd`, `doctoral` | PhD |
+#### After Import
 
-**3. Service Roles Excel** (`service_25-26.xlsx`)
+The import loads staff and modules into the database. **Allocations** (who teaches what) are then managed through the grid UI -- drag staff onto modules or click cells to enter hours. Service roles can be added via the `/services` page.
 
-An Excel file with one sheet listing service roles. The script searches for these column names (case-insensitive):
-
-| Column | Description | Example |
-|--------|-------------|---------|
-| `Role` / `Name` / `Service` | Role name | `Director of Studies` |
-| `Category` / `Type` | `Dept` or `School` | `Dept` |
-| `Staff` / `Assigned` | Staff name or abbreviation | `JS` |
-| `Term` | When the role is active | `Full Year` |
-
-### After Import
-
-Once data is loaded (by either method), the teaching grid at `/grid` will display modules as rows and staff as columns, with allocations shown as hour values in the cells. All other pages (dashboard, reports, exports) draw from the same database.
+All pages (dashboard, grid, reports, exports) draw from the same database, so imported data is immediately available everywhere.
 
 ## Pages
 
@@ -201,8 +199,9 @@ The SQLite database (`data/teaching.db`) is created automatically. Tables:
 
 ```
 ├── data/                    # SQLite database (auto-created)
+│   └── examples/            # Sample CSV files for import
 ├── scripts/
-│   └── import-excel.ts      # Bulk data import from CSV/Excel
+│   └── import-csv.ts        # Bulk data import from CSV
 ├── src/
 │   ├── app/                 # Next.js App Router pages & API routes
 │   │   ├── api/             # REST API (staff, modules, allocations, etc.)
