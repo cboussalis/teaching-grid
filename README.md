@@ -1,338 +1,323 @@
-# Teaching Grid Management System
+# Teaching Grid
 
-A web-based application for managing academic teaching allocations and staff workloads. Built for university departments to coordinate teaching assignments across staff members, modules, and academic terms.
+A web application for managing academic teaching allocations and staff workloads. Built for university departments to coordinate teaching assignments across staff, modules, and academic terms.
 
 ## Features
 
-- **Interactive Teaching Grid**: Spreadsheet-like interface with drag-and-drop support for assigning staff to modules
-- **Staff Management**: Track staff availability, leave of absence, and expected workloads
-- **Module Management**: Organize courses by level (UG, MSc, PhD) and term (MT, HT, TT)
-- **Service Roles**: Manage departmental and school-level administrative duties
-- **Workload Reports**: Comprehensive analysis with over/underload warnings
-- **Data Export**: Export allocations to formatted Excel files
-- **Real-time Validation**: Warnings for scheduling conflicts and availability violations
-- **Multiple Views**: Filter by staff, module, undergraduate year, or postgraduate level
-- **Keyboard Shortcuts**: Quick navigation and allocation management
-- **Undo/Redo**: Track and revert changes
+- **Interactive teaching grid** with drag-and-drop staff-to-module assignment
+- **Staff management** -- track availability, leave of absence, rank, expected workload
+- **Module management** -- organise by level (UG, MSc, PhD) and term (Michaelmas, Hilary, Trinity)
+- **Service roles** -- track departmental and school-level administrative duties
+- **Communication tracking** -- log allocation discussions and agreement status per staff member
+- **Workload reports** -- over/underload warnings, per-term breakdowns
+- **Excel export** -- formatted spreadsheets with formulas and staff summaries
+- **Multiple grid views** -- by staff, by module, by UG year, by PG level
+- **Keyboard shortcuts** -- navigation, copy/paste allocations, undo/redo
+- **Validation** -- warnings for LOA conflicts, term availability, workload imbalances
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 with React 18
+- **Framework**: [Next.js](https://nextjs.org/) 16 (App Router) with React 18
 - **Language**: TypeScript
-- **Database**: SQLite with better-sqlite3
-- **Styling**: Tailwind CSS with Radix UI components
-- **Drag & Drop**: @dnd-kit
+- **Database**: SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) (WAL mode, zero config)
+- **Styling**: Tailwind CSS with [Radix UI](https://www.radix-ui.com/) primitives (shadcn/ui)
+- **Drag & Drop**: [@dnd-kit](https://dndkit.com/)
+- **Excel**: [ExcelJS](https://github.com/exceljs/exceljs) for styled exports
 
 ## Prerequisites
 
-- Node.js 20.9.0 or higher (required by Next.js 16)
+- **Node.js 20.9.0 or higher** (required by Next.js 16)
 - npm
 
-**Note**: If you have multiple Node.js versions via nvm, switch to v20+ first:
+If you manage Node versions with [nvm](https://github.com/nvm-sh/nvm):
+
 ```bash
-nvm use 20
+nvm install 20   # install if needed
+nvm use 20       # switch to it
 ```
 
-## Installation
+## Quick Start
 
-1. Clone or download the repository:
-   ```bash
-   cd /path/to/app
-   ```
+```bash
+git clone https://github.com/cboussalis/teaching-grid.git
+cd teaching-grid
+npm install
+npm run dev
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Open [http://localhost:1821](http://localhost:1821) in your browser.
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+The SQLite database is **automatically created** at `data/teaching.db` on first run with an empty schema. No database setup required.
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+### Launch Script (Linux)
 
-The SQLite database will be automatically created at `data/teaching.db` on first run.
+A convenience script is included that starts the dev server (if not already running) and opens your browser:
 
-## Usage Guide
+```bash
+./launch-teaching-grid.sh
+```
 
-### Dashboard
+It uses relative paths, so it works from wherever the repo is cloned. Set the `BROWSER` environment variable to override the default (e.g., `BROWSER=firefox ./launch-teaching-grid.sh`).
 
-The home page displays an overview of:
-- Total staff members and modules
-- Allocation completion status
-- Quick statistics on workload distribution
-- Navigation links to all sections
+## Populating Data
 
-### Staff Management (`/staff`)
+The app starts with an empty database. There are two ways to add data:
 
-Manage your department's teaching staff:
+### Option 1: Manual Entry via the UI
 
-1. **Add Staff**: Click "Add Staff" and fill in:
-   - Name and abbreviation (used in the grid)
-   - Expected teaching load (hours)
-   - Term availability (MT/HT)
-   - Leave of absence status
+Use the web interface to add data directly:
 
-2. **Edit Staff**: Click the edit icon next to any staff member
+1. **Staff** (`/staff`) -- add staff members with their name, abbreviation, rank, expected load, and availability
+2. **Modules** (`/modules`) -- add modules with code, name, level, term, and teaching hours
+3. **Teaching Grid** (`/grid`) -- assign staff to modules by dragging or clicking
+4. **Service Roles** (`/services`) -- add administrative duties and assign staff
 
-3. **Delete Staff**: Click the delete icon (removes all associated allocations)
+This is the simplest approach for small departments or for getting started.
 
-The staff list shows each person's current workload against their expected load.
+### Option 2: Bulk Import from CSV/Excel
 
-### Module Management (`/modules`)
-
-Manage courses and teaching modules:
-
-1. **Add Module**: Click "Add Module" and enter:
-   - Module code (e.g., "POU101")
-   - Module name
-   - Level: UG (Undergraduate), MSc IP, ASDS, or PhD
-   - Term: MT (Michaelmas), HT (Hilary), TT (Trinity), or Full Year
-   - Teaching hours required
-   - ECTS credits (optional)
-
-2. **Edit Module**: Click any module row to edit
-
-3. **Batch Edit**: Select multiple modules to update level, term, or ECTS together
-
-4. **Delete Module**: Remove modules (cascades to allocations)
-
-### Teaching Grid (`/grid`)
-
-The main interface for managing allocations:
-
-#### Grid Views
-
-Use the tabs to switch between views:
-- **Staff View**: Rows are staff members, columns are modules
-- **Module View**: Rows are modules, columns are staff
-- **Year Views** (1st-4th Year UG): Filter by undergraduate cohort
-- **PG Views**: Filter by postgraduate level
-
-#### Making Allocations
-
-**Drag and Drop**:
-1. Find a staff member in the left sidebar
-2. Drag their badge onto a module cell
-3. Drop to create an allocation with default hours
-
-**Direct Entry**:
-1. Click any cell in the grid
-2. Type the hours to allocate
-3. Press Enter or click away to save
-
-**Copy/Paste**:
-1. Select a cell with an allocation
-2. Press `Ctrl+C` to copy
-3. Navigate to another cell
-4. Press `Ctrl+V` to paste
-
-#### Validation Warnings
-
-The grid displays warnings for:
-- **Red**: Staff on leave of absence assigned to modules
-- **Orange**: Staff unavailable in the allocated term
-- **Yellow**: Staff over their expected workload
-- **Blue**: Staff under their expected workload
-
-#### Staff Sidebar
-
-The left panel shows:
-- All staff members with their abbreviations
-- Current load vs expected load bar
-- Leave/availability status indicators
-- Filter to show only available staff
-
-#### Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| Arrow keys | Navigate between cells |
-| Enter | Edit selected cell |
-| Delete/Backspace | Clear allocation |
-| Ctrl+C | Copy allocation |
-| Ctrl+V | Paste allocation |
-| Ctrl+Z | Undo |
-| Ctrl+Shift+Z | Redo |
-| ? | Show shortcuts help |
-
-### Service Roles (`/services`)
-
-Track administrative duties:
-
-1. **Add Role**: Create departmental or school-level service roles
-2. **Assign Staff**: Select who holds each role
-3. **Set Term**: Indicate when the role is active
-
-Categories:
-- **Dept**: Department-level roles (e.g., Director of Studies)
-- **School**: School-wide responsibilities
-
-### Reports (`/reports`)
-
-Generate analysis reports:
-
-#### Workload Report
-- Staff-by-staff breakdown of teaching allocations
-- Total hours per term (MT, HT)
-- Comparison against expected loads
-- Over/underload highlighting
-
-#### Module Status Report
-- Allocation status for each module
-- Identifies under-staffed or over-staffed modules
-- Hours allocated vs hours required
-
-#### Warnings Report
-- All validation issues across the system
-- Leave of absence conflicts
-- Term availability violations
-- Workload imbalances
-
-### Exporting Data
-
-From the Reports page:
-
-1. Click **Export to Excel**
-2. Choose export options:
-   - Include all modules or filter by level
-   - Include staff summary sheet
-   - Add term breakdown
-3. Download the formatted Excel file
-
-The export includes:
-- Module allocations by level
-- Staff workload summaries
-- SUMIFS formulas for automatic calculations
-
-## Data Management
-
-### Database Location
-
-The SQLite database is stored at `data/teaching.db`. The application uses WAL (Write-Ahead Logging) mode for better concurrent access.
-
-### Backup
-
-To backup your data, copy these files:
-- `data/teaching.db`
-- `data/teaching.db-shm` (if exists)
-- `data/teaching.db-wal` (if exists)
-
-### Import from Excel
-
-If migrating from a legacy system, use the import script:
+For larger datasets or migrating from a previous year, use the import script. It reads from a directory of CSV and Excel files.
 
 ```bash
 npx tsx scripts/import-excel.ts
 ```
 
-Edit the script to point to your source files.
+The script expects files in a `../last-year/` directory (one level up from the app root). Edit the `lastYearPath` variable in the script if your files are elsewhere.
 
-## Development
+#### Expected File Formats
 
-### Available Scripts
+**1. Staff CSV** (`staff_25-26.csv`)
 
-```bash
-# Start development server
-npm run dev
+A CSV file with staff details. Required columns:
 
-# Build for production
-npm run build
+| Column | Description | Example |
+|--------|-------------|---------|
+| `name` | Full name | `Jane Smith` |
+| `name_abbrev` | Short abbreviation (used in the grid) | `JS` |
+| `load` | Expected teaching load (numeric) | `3` |
+| `loa` | Leave of absence flag (0 or 1) | `0` |
+| `mt_available` | Available in Michaelmas Term (0 or 1) | `1` |
+| `ht_available` | Available in Hilary Term (0 or 1) | `1` |
+| `notes` | Optional notes | `On research buyout` |
 
-# Start production server
-npm run start
+Example:
 
-# Run linting
-npm run lint
+```csv
+name,name_abbrev,load,loa,mt_available,ht_available,notes
+Jane Smith,JS,3,0,1,1,
+John Doe,JD,2,0,1,0,On sabbatical HT
+Alex Brown,AB,3,1,0,0,Full year LOA
 ```
 
-### Project Structure
+**2. Teaching Grid Excel** (`PS_GRID_DRAFT1.xlsx`)
 
-```
-src/
-├── app/                 # Next.js pages and API routes
-│   ├── api/            # REST API endpoints
-│   ├── grid/           # Teaching grid page
-│   ├── modules/        # Module management
-│   ├── reports/        # Reports page
-│   ├── services/       # Service roles
-│   └── staff/          # Staff management
-├── components/
-│   ├── ui/             # Reusable UI components
-│   ├── grid/           # Grid-specific components
-│   └── export/         # Export functionality
-├── hooks/              # Custom React hooks
-├── lib/                # Database and utilities
-└── types/              # TypeScript definitions
-```
+An Excel workbook where each sheet represents a module level. The import script determines the level from the sheet name (e.g., a sheet named "UG" or "Undergraduate" maps to UG level).
 
-### API Endpoints
+Each sheet should have this layout:
+
+| Module Code | Module Name | *Staff Abbrev 1* | *Staff Abbrev 2* | ... |
+|-------------|-------------|:---------:|:---------:|:---:|
+| POU1234 | Introduction to Politics | 1 | | |
+| POU2345 | Comparative Politics | | 1 | |
+| POU3456 | Political Theory | 0.5 | 0.5 | |
+
+- **Row 1 (headers)**: First columns are module info; remaining columns are staff abbreviations (must match `name_abbrev` from the staff CSV)
+- **Data rows**: Each row is a module. Numeric values in staff columns indicate allocated teaching hours.
+- **Module code** is in column A, **module name** in column B. Staff columns start from column C onward.
+- The term is inferred from the module code (codes ending in `1` default to MT, `2` to HT, etc.) or from a cell value in the row if it matches a known term.
+
+Sheet name to level mapping:
+
+| Sheet name contains | Mapped level |
+|---------------------|-------------|
+| `ug`, `undergrad` | UG |
+| `msc`, `ip` | MSc IP |
+| `asds`, `data` | ASDS |
+| `phd`, `doctoral` | PhD |
+
+**3. Service Roles Excel** (`service_25-26.xlsx`)
+
+An Excel file with one sheet listing service roles. The script searches for these column names (case-insensitive):
+
+| Column | Description | Example |
+|--------|-------------|---------|
+| `Role` / `Name` / `Service` | Role name | `Director of Studies` |
+| `Category` / `Type` | `Dept` or `School` | `Dept` |
+| `Staff` / `Assigned` | Staff name or abbreviation | `JS` |
+| `Term` | When the role is active | `Full Year` |
+
+### After Import
+
+Once data is loaded (by either method), the teaching grid at `/grid` will display modules as rows and staff as columns, with allocations shown as hour values in the cells. All other pages (dashboard, reports, exports) draw from the same database.
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard -- overview stats, allocation completion, quick links |
+| `/staff` | Staff management -- add/edit/delete, view loads, rank, availability |
+| `/modules` | Module management -- add/edit/delete, batch edit level/term/ECTS |
+| `/grid` | Teaching grid -- drag-and-drop allocations, multiple view modes |
+| `/services` | Service roles -- departmental and school-level duties |
+| `/communications` | Communication tracking -- log discussions, track agreement status |
+| `/reports` | Workload reports, module status, warnings; Excel export |
+
+## API Endpoints
 
 | Endpoint | Methods | Description |
 |----------|---------|-------------|
-| `/api/staff` | GET, POST | List/create staff |
-| `/api/staff/[id]` | GET, PUT, DELETE | Staff CRUD |
-| `/api/modules` | GET, POST | List/create modules |
-| `/api/modules/[id]` | GET, PUT, DELETE | Module CRUD |
+| `/api/staff` | GET, POST | List / create staff |
+| `/api/staff/[id]` | GET, PUT, DELETE | Single staff CRUD |
+| `/api/modules` | GET, POST | List / create modules |
+| `/api/modules/[id]` | GET, PUT, DELETE | Single module CRUD |
 | `/api/allocations` | GET, POST, DELETE | Manage allocations |
-| `/api/allocations/batch` | POST | Batch operations |
-| `/api/services` | GET, POST | List/create service roles |
-| `/api/grid` | GET | Grid data with filters |
-| `/api/reports` | GET | Generate reports |
+| `/api/allocations/batch` | POST | Batch allocation operations (used by drag-drop) |
+| `/api/allocations/[id]` | PUT, DELETE | Single allocation CRUD |
+| `/api/services` | GET, POST | List / create service roles |
+| `/api/services/[id]` | PUT, DELETE | Single service role CRUD |
+| `/api/communications` | GET | List all communication statuses |
+| `/api/communications/[staffId]` | GET, PUT | Staff communication status |
+| `/api/communications/[staffId]/log` | GET, POST | Communication log entries |
+| `/api/grid` | GET | Grid data with joins and filters |
+| `/api/reports` | GET | Report data |
 | `/api/dashboard` | GET | Dashboard statistics |
-| `/api/export/excel` | POST | Excel export |
+| `/api/export/excel` | POST | Styled Excel export |
+| `/api/export/text` | GET | Plain text export |
+| `/api/export` | GET | Basic export |
+
+## Database Schema
+
+The SQLite database (`data/teaching.db`) is created automatically. Tables:
+
+- **staff** -- name, abbreviation, rank, gender, affiliation, LOA status, term availability, expected load, notes
+- **module** -- code, name, level (UG/MSc IP/ASDS/PhD), term (MT/HT/TT/FullYear), teaching load hours, ECTS
+- **allocation** -- links staff to modules with allocated hours (unique per staff-module pair)
+- **service_role** -- role name, category (Dept/School), assigned staff, term
+- **academic_year** -- year label and current-year flag
+- **communication** -- per-staff status tracking (not_started/email_sent/in_discussion/agreed/disputed)
+- **communication_log** -- timestamped notes attached to each communication record
+
+## Project Structure
+
+```
+├── data/                    # SQLite database (auto-created)
+├── scripts/
+│   └── import-excel.ts      # Bulk data import from CSV/Excel
+├── src/
+│   ├── app/                 # Next.js App Router pages & API routes
+│   │   ├── api/             # REST API (staff, modules, allocations, etc.)
+│   │   ├── communications/  # Communication tracking page
+│   │   ├── grid/            # Teaching grid page
+│   │   ├── modules/         # Module management page
+│   │   ├── reports/         # Reports & export page
+│   │   ├── services/        # Service roles page
+│   │   └── staff/           # Staff management page
+│   ├── components/
+│   │   ├── grid/            # Grid-specific components (drag-drop, filters, sidebar)
+│   │   ├── export/          # Export modal
+│   │   ├── nav.tsx          # Navigation bar
+│   │   └── ui/              # Reusable UI components (shadcn/ui)
+│   ├── hooks/               # Custom React hooks (undo/redo, shortcuts, validation, clipboard)
+│   ├── lib/                 # Database, queries, utilities, Excel styling
+│   └── types/               # TypeScript interfaces
+├── launch-teaching-grid.sh  # Convenience launcher (Linux)
+├── package.json
+└── README.md
+```
 
 ## Module Code Conventions
 
-The system recognizes these module code patterns:
+The grid uses module code prefixes to organise year-based views. These patterns are used by default but are not enforced -- you can use any module codes:
 
-- `POU1` - `POU4`: Political Science UG (Years 1-4)
-- `PIU1` - `PIU4`: Philosophy UG (Years 1-4)
-- `POX###`: Placeholder modules
+- `POU1xxx` -- `POU4xxx`: Political Science UG Years 1--4
+- `PIU1xxx` -- `PIU4xxx`: Philosophy UG Years 1--4
+- `POXxxx`: Placeholder / TBD modules
 
-These codes are used to automatically organize the year-based grid views.
+To adapt for your department, modify the year-detection logic in `src/app/grid/page.tsx` and the grouping helpers in `src/lib/module-utils.ts`.
 
 ## Academic Terms
 
-- **MT**: Michaelmas Term (Autumn)
-- **HT**: Hilary Term (Spring)
-- **TT**: Trinity Term (Summer)
-- **Full Year**: Spans all terms
+The app uses the Trinity College Dublin term system:
+
+| Abbreviation | Term | Rough equivalent |
+|-------------|------|-----------------|
+| MT | Michaelmas Term | Autumn / Fall semester |
+| HT | Hilary Term | Spring semester |
+| TT | Trinity Term | Summer term |
+| FullYear | Full Year | Spans all terms |
+
+These values are enforced at the database level. To change them, edit the `CHECK` constraints in `src/lib/db.ts`.
+
+## Development
+
+```bash
+npm run dev      # Start dev server on port 1821
+npm run build    # Production build
+npm run start    # Start production server (after build)
+npm run lint     # ESLint
+```
+
+Path alias: `@/*` maps to `./src/*` (configured in `tsconfig.json`).
+
+## Data Management
+
+### Backup
+
+Copy these files to back up your data:
+
+```bash
+cp data/teaching.db data/teaching.db.backup
+```
+
+If the server is running, the WAL files (`teaching.db-shm`, `teaching.db-wal`) may also exist -- stop the server first for a clean backup, or copy all three files together.
+
+### Reset
+
+To start fresh, delete the database and restart:
+
+```bash
+rm data/teaching.db data/teaching.db-shm data/teaching.db-wal
+npm run dev
+```
+
+A new empty database will be created automatically.
 
 ## Troubleshooting
 
-### Node.js Version Error
+### Node.js version error
 
-If you see `Node.js version ">=20.9.0" is required`, you need to switch to a newer Node.js version:
+If you see `Node.js version ">=20.9.0" is required`:
 
 ```bash
-# If using nvm
-nvm use 20
-
-# Or install Node 20 if not available
-nvm install 20
+nvm install 20 && nvm use 20
 ```
 
-### Database Locked Error
+### Database locked
 
-If you see database locked errors, ensure no other process is accessing the database. The WAL mode should handle most concurrent access scenarios.
+Ensure no other process is accessing `data/teaching.db`. The WAL mode handles most concurrent access, but running multiple dev servers against the same database can cause issues.
 
-### Port Already in Use
+### Port already in use
 
-If port 3000 is busy:
+The dev server runs on port 1821 by default. To change it, edit the `dev` script in `package.json`:
+
+```json
+"dev": "next dev --port 3000"
+```
+
+### Missing native dependencies
+
+`better-sqlite3` requires a C++ compiler for its native bindings. If `npm install` fails:
+
 ```bash
-npm run dev -- -p 3001
+# Ubuntu/Debian
+sudo apt install build-essential python3
+
+# macOS
+xcode-select --install
 ```
 
-### Missing Dependencies
-
-If components fail to load:
-```bash
-rm -rf node_modules
-npm install
-```
+Then run `npm install` again.
 
 ## License
 
-Internal use only.
+MIT
