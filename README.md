@@ -172,10 +172,10 @@ All pages (dashboard, grid, reports, exports) draw from the same database, so im
 | `/api/allocations/batch` | POST | Batch allocation operations (used by drag-drop) |
 | `/api/allocations/[id]` | PUT, DELETE | Single allocation CRUD |
 | `/api/services` | GET, POST | List / create service roles |
-| `/api/services/[id]` | PUT, DELETE | Single service role CRUD |
-| `/api/communications` | GET | List all communication statuses |
+| `/api/services/[id]` | GET, PUT, DELETE | Single service role CRUD |
+| `/api/communications` | GET, POST | List / initialise communication statuses |
 | `/api/communications/[staffId]` | GET, PUT | Staff communication status |
-| `/api/communications/[staffId]/log` | GET, POST | Communication log entries |
+| `/api/communications/[staffId]/log` | POST, DELETE | Communication log entries |
 | `/api/grid` | GET | Grid data with joins and filters |
 | `/api/reports` | GET | Report data |
 | `/api/dashboard` | GET | Dashboard statistics |
